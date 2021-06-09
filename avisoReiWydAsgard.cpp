@@ -5,7 +5,7 @@
 using namespace std;
 
 DWORD pid;
-CHAR target[400];
+CHAR target[10];
 boolean nasceu = false;
 
 std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
@@ -59,10 +59,13 @@ BOOL IsProcessRunning(DWORD pid)
 int main()
 {
     std::wstring windowName;
+    std::string newWindowName;
     std::wcout << "Entre no canal desejado e fique dentro do deserto para iniciar.\n";
-
     std::wcout << "Para iniciar, digite o nome da janela: ";
     std::getline(std::wcin, windowName);
+
+
+
     int nrRand = rand() % 10 + 1;
     char letters[] = "abcdefghijklmnopqrstuvwxyz";
     char letRand = letters[rand() % 26];
@@ -70,8 +73,6 @@ int main()
     HWND hWnd = FindWindow(0, windowName.c_str());
 
     GetWindowThreadProcessId(hWnd, &pid);
-    string newWindowName = letRand + std::to_string(nrRand);
-    SetWindowTextA(hWnd, newWindowName.c_str());
     HANDLE pHandle = OpenProcess(PROCESS_VM_READ, FALSE, pid);
     DWORD rf_client = GetModuleBase(L"DoNPatch.dll", pid); 
     DWORD baseAddress = rf_client + 0x005642C;          
@@ -81,9 +82,22 @@ int main()
     ReadProcessMemory(pHandle, (void*)address, &address, sizeof(address), 0);
     address += 0x0;
 
+    if(IsProcessRunning(pid)) {
+
+        std::wcout << "Agora digite o NOVO nome para a janela: ";
+        std::getline(std::cin, newWindowName);
+        SetWindowTextA(hWnd, newWindowName.c_str());
+
+    }
+    else {
+        cout << "A janela digitada encontra-se fechada!" << endl;
+        Sleep(2000);
+        main();
+    }
+
     while (true) {
 
-        ReadProcessMemory(pHandle, (LPVOID)address, &target, 250, NULL);
+        ReadProcessMemory(pHandle, (LPVOID)address, &target, 10, NULL);
         std::string s(target);
         s = ReplaceAll(s, std::string("Taurons!"), std::string(""));
         s = ReplaceAll(s, std::string("Faltam"), std::string(""));
@@ -91,15 +105,22 @@ int main()
         std::string c(target);
         int numeroTauros = atoi(target);
         if (IsProcessRunning(pid)) {
+            if (nasceu) {
+                cout << "O rei pode ter nascido!   - JANELA: " << newWindowName << endl;
+                Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
+                cin.get(); // espera tocar o som
+            }
 
             if (numeroTauros > 2) {
-                cout << "Faltam" << s << "Taurons!" << endl;
+                cout << "Faltam" << s << "Taurons!   - JANELA: " << newWindowName << endl;
                 nasceu = false;
             }
             if (numeroTauros <= 10) {
                 cout << target << endl;
                 nasceu = true;
             }
+            
+
         }
         else {
             cout << "A janela digitada encontra-se fechada!" << endl;
@@ -108,12 +129,8 @@ int main()
 
         }
         Sleep(100);
-        system("CLS");
-        if (nasceu) {
-            cout << "O rei pode ter nascido!" << endl;
-            //Sleep(60000);
-            ///nasceu = false;
-        }
+       /// system("CLS");
+        
     }
     system("Pause");
 }
