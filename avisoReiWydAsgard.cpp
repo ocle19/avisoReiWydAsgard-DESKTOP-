@@ -5,9 +5,10 @@
 using namespace std;
 
 DWORD pid;
-CHAR target[10];
+CHAR target[250];
 boolean nasceu = false;
-
+int addressNickname;
+CHAR nickname[250];
 std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
     size_t start_pos = 0;
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
@@ -56,37 +57,119 @@ BOOL IsProcessRunning(DWORD pid)
     return ret == WAIT_TIMEOUT;
 }
 
+void cls(HANDLE hConsole)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    SMALL_RECT scrollRect;
+    COORD scrollTarget;
+    CHAR_INFO fill;
+
+    // Get the number of character cells in the current buffer.
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
+    {
+        return;
+    }
+
+    // Scroll the rectangle of the entire buffer.
+    scrollRect.Left = 0;
+    scrollRect.Top = 0;
+    scrollRect.Right = csbi.dwSize.X;
+    scrollRect.Bottom = csbi.dwSize.Y;
+
+    // Scroll it upwards off the top of the buffer with a magnitude of the entire height.
+    scrollTarget.X = 0;
+    scrollTarget.Y = (SHORT)(0 - csbi.dwSize.Y);
+
+    // Fill with empty spaces with the buffer's default text attribute.
+    fill.Char.UnicodeChar = TEXT(' ');
+    fill.Attributes = csbi.wAttributes;
+
+    // Do the scroll
+    ScrollConsoleScreenBuffer(hConsole, &scrollRect, NULL, scrollTarget, &fill);
+
+    // Move the cursor to the top left corner too.
+    csbi.dwCursorPosition.X = 0;
+    csbi.dwCursorPosition.Y = 0;
+
+    SetConsoleCursorPosition(hConsole, csbi.dwCursorPosition);
+}
+
+
+
+std::wstring s2ws(const std::string& s)
+{
+    int len;
+    int slength = (int)s.length() + 1;
+    len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0);
+    wchar_t* buf = new wchar_t[len];
+    MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
+    std::wstring r(buf);
+    delete[] buf;
+    return r;
+}
+
 int main()
 {
     std::wstring windowName;
     std::string newWindowName;
+
     std::wcout << "Entre no canal desejado e fique dentro do deserto para iniciar.\n";
     std::wcout << "Para iniciar, digite o nome da janela: ";
     std::getline(std::wcin, windowName);
 
 
 
-    int nrRand = rand() % 10 + 1;
-    char letters[] = "abcdefghijklmnopqrstuvwxyz";
-    char letRand = letters[rand() % 26];
+    /// LPCWSTR windowName = L"c";
+
+   /// HWND hWnd = FindWindow(0, windowName.c_str());
+
+
+   /// LPCWSTR gameone = L"c";
 
     HWND hWnd = FindWindow(0, windowName.c_str());
 
     GetWindowThreadProcessId(hWnd, &pid);
     HANDLE pHandle = OpenProcess(PROCESS_VM_READ, FALSE, pid);
-    DWORD rf_client = GetModuleBase(L"DoNPatch.dll", pid); 
-    DWORD baseAddress = rf_client + 0x005642C;          
-    DWORD address = 0; 
-    ReadProcessMemory(pHandle, (void*)baseAddress, &address, sizeof(address), 0); 
+    DWORD rf_client = GetModuleBase(L"DoNPatch.dll", pid);
+    DWORD baseAddress = rf_client + 0x005642C;
+    DWORD address = 0;
+    ReadProcessMemory(pHandle, (void*)baseAddress, &address, sizeof(address), 0);
     address += 0x59C;
     ReadProcessMemory(pHandle, (void*)address, &address, sizeof(address), 0);
     address += 0x0;
 
-    if(IsProcessRunning(pid)) {
+    DWORD rf_client2 = GetModuleBase(L"SD Asgard.exe", pid);
+    DWORD baseAddressNickname = rf_client2 + 0x01EDD54;
+    DWORD addressNickname = 0;
+    ReadProcessMemory(pHandle, (void*)baseAddressNickname, &addressNickname, sizeof(addressNickname), 0);
+    addressNickname += 0x0;
+
+    if (IsProcessRunning(pid)) {
 
         std::wcout << "Agora digite o NOVO nome para a janela: ";
         std::getline(std::cin, newWindowName);
-        SetWindowTextA(hWnd, newWindowName.c_str());
+        std::wstring windowName = s2ws(newWindowName.c_str());
+        LPCWSTR result = windowName.c_str();
+        SetWindowText(hWnd, result);
+
+        HWND hWnd = FindWindow(0, result);
+
+        GetWindowThreadProcessId(hWnd, &pid);
+        HANDLE pHandle = OpenProcess(PROCESS_VM_READ, FALSE, pid);
+        DWORD rf_client = GetModuleBase(L"DoNPatch.dll", pid);
+        DWORD baseAddress = rf_client + 0x005642C;
+        DWORD address = 0;
+        ReadProcessMemory(pHandle, (void*)baseAddress, &address, sizeof(address), 0);
+        address += 0x59C;
+        ReadProcessMemory(pHandle, (void*)address, &address, sizeof(address), 0);
+        address += 0x0;
+
+        DWORD rf_client2 = GetModuleBase(L"SD Asgard.exe", pid);
+        DWORD baseAddressNickname = rf_client2 + 0x01EDD54;
+        DWORD addressNickname = 0;
+        ReadProcessMemory(pHandle, (void*)baseAddressNickname, &addressNickname, sizeof(addressNickname), 0);
+        addressNickname += 0x0;
+
 
     }
     else {
@@ -97,29 +180,38 @@ int main()
 
     while (true) {
 
-        ReadProcessMemory(pHandle, (LPVOID)address, &target, 10, NULL);
+        ReadProcessMemory(pHandle, (LPVOID)address, &target, 250, NULL);
+        ReadProcessMemory(pHandle, (LPVOID)addressNickname, &nickname, 250, NULL);
+        /// cout << target << endl;
         std::string s(target);
+        std::string sNickname(nickname);
         s = ReplaceAll(s, std::string("Taurons!"), std::string(""));
         s = ReplaceAll(s, std::string("Faltam"), std::string(""));
         s = ReplaceAll(s, std::string(" "), std::string(""));
-        std::string c(target);
-        int numeroTauros = atoi(target);
+
+        int numeroTauros = atoi(std::string(s).c_str());
+        // cout << "Faltam" << s << "Taurons!   - JANELA: " << newWindowName << endl;
         if (IsProcessRunning(pid)) {
-            if (nasceu) {
-                cout << "O rei pode ter nascido!   - JANELA: " << newWindowName << endl;
-                Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
-                cin.get(); // espera tocar o som
+            if (sNickname.length() >= 3) {
+                if (numeroTauros > 2) {
+                    cout << "\n\nFaltam " << numeroTauros << " Taurons!   \nJANELA: " << newWindowName <<  "\nPERSONAGEM: " << sNickname << endl;
+                    nasceu = false;
+                }
+                if (numeroTauros <= 10) {
+                    nasceu = true;
+                    /// if (nasceu) {
+                     cout << "O Rei Tauro pode ter nascido!\nJANELA: " << newWindowName << "\nPERSONAGEM: " << sNickname << endl;
+                     cout << "\n\nAguardando o Rei Tauro morrer... \n Use o pergaminho para o deserto caso o Rei Tauro esteja morto." << endl;
+                    Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
+                    cin.get(); // espera tocar o som
+
+              ///  }
+                }
+            }
+            else {
+                cout << "Conecte-se em algum personagem e use um pergaminho para o deserto." << endl;
             }
 
-            if (numeroTauros > 2) {
-                cout << "Faltam" << s << "Taurons!   - JANELA: " << newWindowName << endl;
-                nasceu = false;
-            }
-            if (numeroTauros <= 10) {
-                cout << target << endl;
-                nasceu = true;
-            }
-            
 
         }
         else {
@@ -128,9 +220,12 @@ int main()
             main();
 
         }
-        Sleep(100);
-       /// system("CLS");
-        
+        Sleep(500);
+        HANDLE hStdout;
+
+        hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+
+        cls(hStdout);
     }
     system("Pause");
 }
