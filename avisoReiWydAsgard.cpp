@@ -2,6 +2,9 @@
 #include <Windows.h>
 #include <string>
 #include <TlHelp32.h>
+#include <fstream>  
+#include <conio.h>
+
 using namespace std;
 
 DWORD pid;
@@ -110,6 +113,8 @@ std::wstring s2ws(const std::string& s)
 
 int main()
 {
+    setlocale(LC_ALL, "Portuguese");
+
     std::wstring windowName;
     std::string newWindowName;
 
@@ -170,7 +175,6 @@ int main()
         ReadProcessMemory(pHandle, (void*)baseAddressNickname, &addressNickname, sizeof(addressNickname), 0);
         addressNickname += 0x0;
 
-
     }
     else {
         cout << "A janela digitada encontra-se fechada!" << endl;
@@ -185,6 +189,7 @@ int main()
         /// cout << target << endl;
         std::string s(target);
         std::string sNickname(nickname);
+        std::string MENSAGEM;
         s = ReplaceAll(s, std::string("Taurons!"), std::string(""));
         s = ReplaceAll(s, std::string("Faltam"), std::string(""));
         s = ReplaceAll(s, std::string(" "), std::string(""));
@@ -193,20 +198,46 @@ int main()
         // cout << "Faltam" << s << "Taurons!   - JANELA: " << newWindowName << endl;
         if (IsProcessRunning(pid)) {
             if (sNickname.length() >= 3) {
+
                 if (numeroTauros > 2) {
+
                     cout << "\n\nFaltam " << numeroTauros << " Taurons!   \nJANELA: " << newWindowName <<  "\nPERSONAGEM: " << sNickname << endl;
                     nasceu = false;
+                    MENSAGEM = s;
                 }
                 if (numeroTauros <= 10) {
                     nasceu = true;
-                    /// if (nasceu) {
-                     cout << "O Rei Tauro pode ter nascido!\nJANELA: " << newWindowName << "\nPERSONAGEM: " << sNickname << endl;
-                     cout << "\n\nAguardando o Rei Tauro morrer... \n Use o pergaminho para o deserto caso o Rei Tauro esteja morto." << endl;
-                    Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
+                    if (nasceu) {
+                        cout << "\nO Rei Tauron pode ter nascido!\nJANELA: " << newWindowName << "\nPERSONAGEM: " << sNickname << endl;
+                        cout << "\n\nAguardando o Rei Tauron morrer... \n Use o pergaminho para o deserto caso o Rei esteja morto." << endl;
+                        Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
                     ///cin.get(); // espera tocar o som
-
-              ///  }
+                        nasceu = false;
+                        MENSAGEM = "Rei Tauron pode ter nascido no canal " + newWindowName;
+                    }
                 }
+
+                if (newWindowName == "ODIN-1") {
+                    std::ofstream ofs("ODIN-1.txt", std::ofstream::out);
+                    ofs << MENSAGEM;
+                    ofs.close();
+                }
+                else if (newWindowName == "ODIN-2") {
+                    std::ofstream ofs("ODIN-2.txt", std::ofstream::out);
+                    ofs << MENSAGEM;
+                    ofs.close();
+                }
+                else if (newWindowName == "ODIN-3") {
+                    std::ofstream ofs("ODIN-3.txt", std::ofstream::out);
+                    ofs << MENSAGEM;
+                    ofs.close();
+                }
+                else
+                {
+
+                }
+                
+
             }
             else {
                 cout << "Conecte-se em algum personagem e use um pergaminho para o deserto." << endl;
