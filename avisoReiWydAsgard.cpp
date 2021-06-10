@@ -203,7 +203,7 @@ int main()
                      cout << "O Rei Tauro pode ter nascido!\nJANELA: " << newWindowName << "\nPERSONAGEM: " << sNickname << endl;
                      cout << "\n\nAguardando o Rei Tauro morrer... \n Use o pergaminho para o deserto caso o Rei Tauro esteja morto." << endl;
                     Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
-                    cin.get(); // espera tocar o som
+                    ///cin.get(); // espera tocar o som
 
               ///  }
                 }
