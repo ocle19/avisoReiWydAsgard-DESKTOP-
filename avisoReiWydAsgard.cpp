@@ -11,7 +11,9 @@ DWORD pid;
 CHAR target[250];
 boolean nasceu = false;
 int addressNickname;
+int addressCoordenadasReiTauron;
 CHAR nickname[250];
+CHAR coodenadasReiTauron[250];
 std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
     size_t start_pos = 0;
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
@@ -143,6 +145,13 @@ int main()
     ReadProcessMemory(pHandle, (void*)address, &address, sizeof(address), 0);
     address += 0x0;
 
+    DWORD baseAddressCoordenadasReiTauron = rf_client + 0x005642C;
+    DWORD addressCoordenadasReiTauron = 0;
+    ReadProcessMemory(pHandle, (void*)baseAddressCoordenadasReiTauron, &addressCoordenadasReiTauron, sizeof(addressCoordenadasReiTauron), 0);
+    addressCoordenadasReiTauron += 0x61C;
+    ReadProcessMemory(pHandle, (void*)addressCoordenadasReiTauron, &addressCoordenadasReiTauron, sizeof(addressCoordenadasReiTauron), 0);
+    addressCoordenadasReiTauron += 0x0;
+
     DWORD rf_client2 = GetModuleBase(L"SD Asgard.exe", pid);
     DWORD baseAddressNickname = rf_client2 + 0x01EDD54;
     DWORD addressNickname = 0;
@@ -169,11 +178,21 @@ int main()
         ReadProcessMemory(pHandle, (void*)address, &address, sizeof(address), 0);
         address += 0x0;
 
+        DWORD baseAddressCoordenadasReiTauron = rf_client + 0x005642C;
+        DWORD addressCoordenadasReiTauron = 0;
+        ReadProcessMemory(pHandle, (void*)baseAddressCoordenadasReiTauron, &addressCoordenadasReiTauron, sizeof(addressCoordenadasReiTauron), 0);
+        addressCoordenadasReiTauron += 0x61C;
+        ReadProcessMemory(pHandle, (void*)addressCoordenadasReiTauron, &addressCoordenadasReiTauron, sizeof(addressCoordenadasReiTauron), 0);
+        addressCoordenadasReiTauron += 0x0;
+
         DWORD rf_client2 = GetModuleBase(L"SD Asgard.exe", pid);
         DWORD baseAddressNickname = rf_client2 + 0x01EDD54;
         DWORD addressNickname = 0;
         ReadProcessMemory(pHandle, (void*)baseAddressNickname, &addressNickname, sizeof(addressNickname), 0);
         addressNickname += 0x0;
+
+    
+
 
     }
     else {
@@ -185,10 +204,12 @@ int main()
     while (true) {
 
         ReadProcessMemory(pHandle, (LPVOID)address, &target, 250, NULL);
+        ReadProcessMemory(pHandle, (LPVOID)addressCoordenadasReiTauron, &coodenadasReiTauron, 250, NULL);
         ReadProcessMemory(pHandle, (LPVOID)addressNickname, &nickname, 250, NULL);
         /// cout << target << endl;
         std::string s(target);
         std::string sNickname(nickname);
+        std::string sCoordenada(coodenadasReiTauron);
         std::string MENSAGEM;
         s = ReplaceAll(s, std::string("Taurons!"), std::string(""));
         s = ReplaceAll(s, std::string("Faltam"), std::string(""));
@@ -201,14 +222,14 @@ int main()
 
                 if (numeroTauros > 2) {
 
-                    cout << "\n\nFaltam " << numeroTauros << " Taurons!   \nJANELA: " << newWindowName <<  "\nPERSONAGEM: " << sNickname << endl;
+                    cout << "\n\nFaltam " << numeroTauros << " Taurons!  " << sCoordenada << "  \nJANELA: " << newWindowName <<  "\nPERSONAGEM: " << sNickname << endl;
                     nasceu = false;
                     MENSAGEM = s;
                 }
                 if (numeroTauros <= 10) {
                     nasceu = true;
                     if (nasceu) {
-                        cout << "\nO Rei Tauron pode ter nascido!\nJANELA: " << newWindowName << "\nPERSONAGEM: " << sNickname << endl;
+                        cout << "\nO Rei Tauron pode ter nascido! "<< sCoordenada << "\nJANELA: " << newWindowName << "\nPERSONAGEM : " << sNickname << endl;
                         cout << "\n\nAguardando o Rei Tauron morrer... \n Use o pergaminho para o deserto caso o Rei esteja morto." << endl;
                         Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
                     ///cin.get(); // espera tocar o som
