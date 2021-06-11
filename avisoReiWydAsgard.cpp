@@ -10,8 +10,6 @@ using namespace std;
 DWORD pid;
 CHAR target[250];
 boolean nasceu = false;
-int addressNickname;
-int addressCoordenadasReiTauron;
 CHAR nickname[250];
 CHAR coodenadasReiTauron[250];
 
@@ -228,17 +226,14 @@ int main()
                     nasceu = false;
                     MENSAGEM = s;
                 }
-                if (numeroTauros <= 10) {
+                if (numeroTauros <= 0) {
                     nasceu = true;
-                    if (nasceu) {
                         cout << "\nO Rei Tauron pode ter nascido! "<< sCoordenada << "]\nJANELA: " << newWindowName << "\nPERSONAGEM : " << sNickname << endl;
-                        cout << "\n\nAguardando o Rei Tauron morrer... \n Use o pergaminho para o deserto caso o Rei esteja morto." << endl;
-                        Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
+                        cout << "\n\nAguardando o Rei Tauron morrer... \n" << endl;
+                      ///  Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
                     ///cin.get(); // espera tocar o som
                         nasceu = false;
                         MENSAGEM = "Rei Tauron pode ter nascido no canal " + newWindowName + "," + sCoordenada;
-                       
-                    }
                 }
 
                 if (newWindowName == "ODIN-1") {
