@@ -14,6 +14,7 @@ int addressNickname;
 int addressCoordenadasReiTauron;
 CHAR nickname[250];
 CHAR coodenadasReiTauron[250];
+
 std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
     size_t start_pos = 0;
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
@@ -214,12 +215,13 @@ int main()
         s = ReplaceAll(s, std::string("Taurons!"), std::string(""));
         s = ReplaceAll(s, std::string("Faltam"), std::string(""));
         s = ReplaceAll(s, std::string(" "), std::string(""));
+        cout << "\n\Letras coorde: " << sCoordenada.length() << "->" << sCoordenada << endl;
 
         int numeroTauros = atoi(std::string(s).c_str());
         // cout << "Faltam" << s << "Taurons!   - JANELA: " << newWindowName << endl;
         if (IsProcessRunning(pid)) {
             if (sNickname.length() >= 3) {
-
+                cout << "\n\Letras coorde: " << sCoordenada.length() << "->" << sCoordenada << endl;
                 if (numeroTauros > 2) {
 
                     cout << "\n\nFaltam " << numeroTauros << " Taurons!  " << sCoordenada << "  \nJANELA: " << newWindowName <<  "\nPERSONAGEM: " << sNickname << endl;
@@ -229,12 +231,13 @@ int main()
                 if (numeroTauros <= 10) {
                     nasceu = true;
                     if (nasceu) {
-                        cout << "\nO Rei Tauron pode ter nascido! "<< sCoordenada << "\nJANELA: " << newWindowName << "\nPERSONAGEM : " << sNickname << endl;
+                        cout << "\nO Rei Tauron pode ter nascido! "<< sCoordenada << "]\nJANELA: " << newWindowName << "\nPERSONAGEM : " << sNickname << endl;
                         cout << "\n\nAguardando o Rei Tauron morrer... \n Use o pergaminho para o deserto caso o Rei esteja morto." << endl;
                         Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
                     ///cin.get(); // espera tocar o som
                         nasceu = false;
-                        MENSAGEM = "Rei Tauron pode ter nascido no canal " + newWindowName;
+                        MENSAGEM = "Rei Tauron pode ter nascido no canal " + newWindowName + "," + sCoordenada;
+                       
                     }
                 }
 
@@ -257,7 +260,7 @@ int main()
                 {
 
                 }
-                
+                cout << MENSAGEM << endl;
 
             }
             else {
