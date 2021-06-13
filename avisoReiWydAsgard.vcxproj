@@ -140,6 +140,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="avisoReiWydAsgard.cpp" />
+    <ClCompile Include="Pathfinding.cpp" />
+    <ClCompile Include="SendFunc.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CSocket.h" />
+    <ClInclude Include="PathFinding.h" />
+    <ClInclude Include="SendFunc.h" />
+    <ClInclude Include="Struct.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

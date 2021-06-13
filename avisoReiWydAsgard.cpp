@@ -4,7 +4,10 @@
 #include <TlHelp32.h>
 #include <fstream>  
 #include <conio.h>
+#include "PathFinding.h"
 
+#include <vector>
+#include "SendFunc.h"
 using namespace std;
 
 DWORD pid;
@@ -12,7 +15,14 @@ CHAR target[250];
 boolean nasceu = false;
 CHAR nickname[250];
 CHAR coodenadasReiTauron[250];
-
+float playerX;
+float playerY;
+int reiX;
+int reiY;
+int modoAtaque = 0;
+int pocaoHp = 30;
+int racaoPet = 30;
+Node* node;
 std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
     size_t start_pos = 0;
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
@@ -112,10 +122,45 @@ std::wstring s2ws(const std::string& s)
     return r;
 }
 
+double GetDistance(int x1, int y1, int x2, int y2)
+{
+    return sqrt(float(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1))));
+}
+vector<string> split(string str, char delimiter = ',')
+{
+    vector<string> ret;
+    if (str.empty())
+    {
+        ret.push_back(string(""));
+        return ret;
+    }
+
+    unsigned i = 0;
+    string strstack;
+    while (!(str.empty()) && (str[0] == delimiter)) { str.erase(0, 1); }
+    reverse(str.begin(), str.end());
+    while (!(str.empty()) && (str[0] == delimiter)) { str.erase(0, 1); }
+    reverse(str.begin(), str.end());
+    while (!str.empty())
+    {
+        ret.push_back(str.substr(i, str.find(delimiter)));
+        str.erase(0, str.find(delimiter));
+        while (!(str.empty()) && (str[0] == delimiter)) { str.erase(0, 1); }
+    }
+
+    return ret;
+}
+void PatchEx(BYTE* dst, BYTE* src, unsigned int size, HANDLE hProcess)
+{
+    DWORD oldprotect;
+    VirtualProtectEx(hProcess, dst, size, PAGE_EXECUTE_READWRITE, &oldprotect);
+    WriteProcessMemory(hProcess, dst, src, size, nullptr);
+    VirtualProtectEx(hProcess, dst, size, oldprotect, &oldprotect);
+}
 int main()
 {
     setlocale(LC_ALL, "Portuguese");
-
+    node = new Node();
     std::wstring windowName;
     std::string newWindowName;
 
@@ -135,7 +180,7 @@ int main()
     HWND hWnd = FindWindow(0, windowName.c_str());
 
     GetWindowThreadProcessId(hWnd, &pid);
-    HANDLE pHandle = OpenProcess(PROCESS_VM_READ, FALSE, pid);
+    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
     DWORD rf_client = GetModuleBase(L"DoNPatch.dll", pid);
     DWORD baseAddress = rf_client + 0x005642C;
     DWORD address = 0;
@@ -157,6 +202,28 @@ int main()
     ReadProcessMemory(pHandle, (void*)baseAddressNickname, &addressNickname, sizeof(addressNickname), 0);
     addressNickname += 0x0;
 
+    DWORD baseAddressPlayerX = rf_client2 + 0x01EDD58;
+    DWORD addressPlayerX = 0;
+    ReadProcessMemory(pHandle, (void*)baseAddressPlayerX, &addressPlayerX, sizeof(addressPlayerX), 0);
+    addressPlayerX += 0x770;
+    ReadProcessMemory(pHandle, (void*)addressPlayerX, &addressPlayerX, sizeof(addressPlayerX), 0);
+    addressPlayerX += 0xC;
+    ReadProcessMemory(pHandle, (void*)addressPlayerX, &addressPlayerX, sizeof(addressPlayerX), 0);
+    addressPlayerX += 0x78;
+
+    DWORD addressPlayerY = 0;
+    ReadProcessMemory(pHandle, (void*)baseAddressPlayerX, &addressPlayerY, sizeof(addressPlayerY), 0);
+    addressPlayerY += 0x770;
+    ReadProcessMemory(pHandle, (void*)addressPlayerY, &addressPlayerY, sizeof(addressPlayerY), 0);
+    addressPlayerY += 0xC;
+    ReadProcessMemory(pHandle, (void*)addressPlayerY, &addressPlayerY, sizeof(addressPlayerY), 0);
+    addressPlayerY += 0x7C;
+
+
+    DWORD addressModoAtaque = rf_client2 + 0x20A9FC;
+    DWORD addressPocaoHp = rf_client2 + 0x20AA04;
+    DWORD addressRacaoPet= rf_client2 + 0x20AA00;
+
     if (IsProcessRunning(pid)) {
 
         std::wcout << "Agora digite o NOVO nome para a janela: ";
@@ -168,7 +235,7 @@ int main()
         HWND hWnd = FindWindow(0, result);
 
         GetWindowThreadProcessId(hWnd, &pid);
-        HANDLE pHandle = OpenProcess(PROCESS_VM_READ, FALSE, pid);
+        HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
         DWORD rf_client = GetModuleBase(L"DoNPatch.dll", pid);
         DWORD baseAddress = rf_client + 0x005642C;
         DWORD address = 0;
@@ -190,9 +257,26 @@ int main()
         ReadProcessMemory(pHandle, (void*)baseAddressNickname, &addressNickname, sizeof(addressNickname), 0);
         addressNickname += 0x0;
 
-    
+        DWORD baseAddressPlayerX = rf_client2 + 0x01EDD58;
+        DWORD addressPlayerX = 0;
+        ReadProcessMemory(pHandle, (void*)baseAddressPlayerX, &addressPlayerX, sizeof(addressPlayerX), 0);
+        addressPlayerX += 0x770;
+        ReadProcessMemory(pHandle, (void*)addressPlayerX, &addressPlayerX, sizeof(addressPlayerX), 0);
+        addressPlayerX += 0xC;
+        ReadProcessMemory(pHandle, (void*)addressPlayerX, &addressPlayerX, sizeof(addressPlayerX), 0);
+        addressPlayerX += 0x78;
+ 
+        DWORD addressPlayerY = 0;
+        ReadProcessMemory(pHandle, (void*)baseAddressPlayerX, &addressPlayerY, sizeof(addressPlayerY), 0);
+        addressPlayerY += 0x770;
+        ReadProcessMemory(pHandle, (void*)addressPlayerY, &addressPlayerY, sizeof(addressPlayerY), 0);
+        addressPlayerY += 0xC;
+        ReadProcessMemory(pHandle, (void*)addressPlayerY, &addressPlayerY, sizeof(addressPlayerY), 0);
+        addressPlayerY += 0x7C;
 
-
+        DWORD addressModoAtaque = rf_client2 + 0x20A9FC;
+        DWORD addressPocaoHp = rf_client2 + 0x20AA04;
+        DWORD addressRacaoPet = rf_client2 + 0x20AA00;
     }
     else {
         cout << "A janela digitada encontra-se fechada!" << endl;
@@ -201,37 +285,122 @@ int main()
     }
 
     while (true) {
-
         ReadProcessMemory(pHandle, (LPVOID)address, &target, 250, NULL);
         ReadProcessMemory(pHandle, (LPVOID)addressCoordenadasReiTauron, &coodenadasReiTauron, 250, NULL);
         ReadProcessMemory(pHandle, (LPVOID)addressNickname, &nickname, 250, NULL);
+        ReadProcessMemory(pHandle, (LPVOID)addressPlayerX, &playerX, sizeof(addressPlayerX), 0);
+        ReadProcessMemory(pHandle, (LPVOID)addressPlayerY, &playerY, sizeof(addressPlayerY), 0);
+        ReadProcessMemory(pHandle, (LPVOID)addressModoAtaque, &modoAtaque, sizeof(addressModoAtaque), 0);
+        ReadProcessMemory(pHandle, (LPVOID)addressPocaoHp, &pocaoHp, sizeof(addressPocaoHp), 0);
+        ReadProcessMemory(pHandle, (LPVOID)addressRacaoPet, &racaoPet, sizeof(addressRacaoPet), 0);
+       
         /// cout << target << endl;
         std::string s(target);
         std::string sNickname(nickname);
         std::string sCoordenada(coodenadasReiTauron);
+       
         std::string MENSAGEM;
         s = ReplaceAll(s, std::string("Taurons!"), std::string(""));
         s = ReplaceAll(s, std::string("Faltam"), std::string(""));
         s = ReplaceAll(s, std::string(" "), std::string(""));
-        cout << "\n\Letras coorde: " << sCoordenada.length() << "->" << sCoordenada << endl;
+        ///cout << "\n\Letras coorde: " << sCoordenada.length() << "->" << sCoordenada << endl;
+      
+
+
+        playerX = (int)playerX;
+        playerY = (int)playerY;
+        modoAtaque = (int)modoAtaque;
+        std::string modoAtaqueString;
+        if (modoAtaque == 1) {
+            modoAtaqueString = "FISICO";
+        }
+        else if (modoAtaque == 2) {
+            modoAtaqueString = "MAGIA";
+        }
+        else if (modoAtaque == 3) {
+            modoAtaqueString = "APENAS POTE";
+        }
+        else {
+            modoAtaqueString = "DESATIVADO";
+        }
+        cout << "Modo Ataque: " << modoAtaque << endl;
+        cout << "Modo Ataque: " << modoAtaqueString << endl;
+        cout << "Auto HP: " << pocaoHp << "%" << endl;
+        cout << "Alimentar PET: " << racaoPet << "%" << endl;
+
+       
 
         int numeroTauros = atoi(std::string(s).c_str());
         // cout << "Faltam" << s << "Taurons!   - JANELA: " << newWindowName << endl;
         if (IsProcessRunning(pid)) {
-            if (sNickname.length() >= 3) {
-                cout << "\n\Letras coorde: " << sCoordenada.length() << "->" << sCoordenada << endl;
+            ///cout << "\n\Letras coorde: " << sNickname.length() << "->" << sNickname << endl;
+            if (sNickname.length() >= 1) {
+              
                 if (numeroTauros > 2) {
+                   /// node->Path((int)playerX, (int)playerY, 1169, 1699);
+                   //// printf("Movendo de %dx %dy para %dx %dy", (int)playerX, (int)playerY, 1169, 1699);
+                   /// node->Queue = 1;
+                   /// playerX = node->Route[node->RouteActual].X;
+                    ////playerY = node->Route[node->RouteActual].Y;
 
-                    cout << "\n\nFaltam " << numeroTauros << " Taurons!  " << sCoordenada << "  \nJANELA: " << newWindowName <<  "\nPERSONAGEM: " << sNickname << endl;
+                    cout << "\n\nFaltam " << numeroTauros << " Taurons!  " << sCoordenada << "  \nJANELA: " << newWindowName <<  "\nPERSONAGEM: " << sNickname << "\n x:" << playerX << "  y:" << playerY << endl;
                     nasceu = false;
                     MENSAGEM = s;
                 }
                 if (numeroTauros <= 0) {
                     nasceu = true;
-                        cout << "\nO Rei Tauron pode ter nascido! "<< sCoordenada << "]\nJANELA: " << newWindowName << "\nPERSONAGEM : " << sNickname << endl;
-                        cout << "\n\nAguardando o Rei Tauron morrer... \n" << endl;
+
+                    std::string xT(coodenadasReiTauron);
+                    xT = ReplaceAll(xT, std::string("Rei vivo!"), std::string(""));
+                    xT = ReplaceAll(xT, std::string("("), std::string(""));
+                    xT = ReplaceAll(xT, std::string(")"), std::string(""));
+                    vector<string> reiCoords;
+                    reiCoords = split(xT, ' ');
+                    int reiX = atoi(std::string(reiCoords[0]).c_str());
+                    int reiY = atoi(std::string(reiCoords[1]).c_str());
+                    cout << "\nO Rei Tauron pode ter nascido!\nJANELA: " << newWindowName << "\n\nCHAR: " << sNickname << "      \nx:" << playerX << "  y:" << playerY << "\n\nALVO: Rei Tauron      \nx:" << reiX << "  y:" << reiY << "\n\n" << endl;
+                    int distRei = GetDistance(playerX, playerY, reiX, reiY);
+                    cout << "Distancia do rei: " << distRei <<  " metros" << endl;
+
+                    int modo = 2;
+                    int hp = 30;
+                    if (GetDistance(playerX, playerY, reiX, reiY) <= 12) {
+                        BOOL alterarModoAtaque = WriteProcessMemory(pHandle, (LPVOID)addressModoAtaque, (LPVOID)&modo, sizeof((LPVOID)modo), NULL);
+                        BOOL alterarPocao = WriteProcessMemory(pHandle, (LPVOID)addressPocaoHp, (LPVOID)&hp, sizeof((LPVOID)hp), NULL);
+                        if (alterarModoAtaque && alterarPocao) {
+                            cout << "O modo de ataque foi alterado para " << modoAtaqueString << " e pote hp para " << pocaoHp << "%" << "por estar perto do Rei" << endl;
+                        }
+                        else {
+                            DWORD errCode = GetLastError();
+                            cout << "Writing the memory failed!" << endl;
+                            cout << "Error code: " << errCode << endl;
+                        }
+                    }
+                    else {
+                        int modo = 0;
+                        int hp = 30;
+                        BOOL alterarModoAtaque = WriteProcessMemory(pHandle, (LPVOID)addressModoAtaque, (LPVOID)&modo, sizeof((LPVOID)modo), NULL);
+                        BOOL alterarPocao = WriteProcessMemory(pHandle, (LPVOID)addressPocaoHp, (LPVOID)&hp, sizeof((LPVOID)hp), NULL);
+                        if (alterarModoAtaque && alterarPocao) {
+                            cout << "O modo de ataque foi alterado para " << modoAtaqueString << " e pote hp para " << pocaoHp << "%" << "por estar longe do Rei" << endl;
+                        }
+                        else {
+                            DWORD errCode = GetLastError();
+                            cout << "Writing the memory failed!" << endl;
+                            cout << "Error code: " << errCode << endl;
+                        }
+                    }
+
+                   /// SendAction(playerX, playerY, node->Route[node->RouteActual].X, node->Route[node->RouteActual].Y, 4, 0);
+                   /// node->Path(playerX, playerY, reiX, reiY);
+
+                   /// ServerMessage("Caminhou para %dx %dy", Client.Position.X, Client.Position.Y);
+                       
+                        ////cout << "\n\nAguardando o Rei Tauron morrer... \n" << endl;
                       ///  Beep(523, 3000); // 523 hertz (C5) por 500 milissegundos (0,5 segundos)
                     ///cin.get(); // espera tocar o som
+                    ///      
+                    ///
                         nasceu = false;
                         MENSAGEM = "Rei Tauron pode ter nascido no canal " + newWindowName + "," + sCoordenada;
                 }
@@ -255,11 +424,17 @@ int main()
                 {
 
                 }
-                cout << MENSAGEM << endl;
+              ////  cout << MENSAGEM << endl;
 
             }
             else {
-                cout << "Conecte-se em algum personagem e use um pergaminho para o deserto." << endl;
+                cout << "Conecte-se em algum personagem." << endl;
+                ReadProcessMemory(pHandle, (LPVOID)address, &target, 250, NULL);
+                ReadProcessMemory(pHandle, (LPVOID)addressCoordenadasReiTauron, &coodenadasReiTauron, 250, NULL);
+                ReadProcessMemory(pHandle, (LPVOID)addressNickname, &nickname, 250, NULL);
+                ReadProcessMemory(pHandle, (LPVOID)addressPlayerX, &playerX, sizeof(addressPlayerX), 0);
+                ReadProcessMemory(pHandle, (LPVOID)addressPlayerY, &playerY, sizeof(addressPlayerY), 0);
+             
             }
 
 
